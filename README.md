@@ -1,0 +1,2 @@
+# PronosticoMiraAstroVe
+Aplicación para pronósticos
