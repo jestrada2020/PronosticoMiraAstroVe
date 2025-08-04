@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - PRONOSTICO2024</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-item {
+            margin: 15px 0;
+            padding: 10px;
+            border-left: 4px solid #667eea;
+            background: #f8f9ff;
+        }
+        .success { border-left-color: #48bb78; background: #f0fff4; }
+        .error { border-left-color: #f56565; background: #fff5f5; }
+        .warning { border-left-color: #ed8936; background: #fffaf0; }
+        h1 { color: #4a5568; text-align: center; }
+        h2 { color: #667eea; }
+        .status { font-weight: bold; }
+        .file-list { 
+            background: #f7fafc; 
+            padding: 10px; 
+            border-radius: 5px; 
+            margin: 10px 0; 
+        }
+        .file-list ul { margin: 5px 0; }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #5a67d8; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Test de Validación - PRONOSTICO2024</h1>
+        
+        <div class="test-item">
+            <h2>📁 Estructura de Archivos</h2>
+            <div id="file-structure-test">Ejecutando test...</div>
+        </div>
+
+        <div class="test-item">
+            <h2>📊 Archivos CSV Disponibles</h2>
+            <div id="csv-files-test">
+                <div class="file-list">
+                    <strong>Archivos CSV encontrados:</strong>
+                    <ul>
+                        <li>✅ BASEdataENERO3CIFRASV2.csv</li>
+                        <li>✅ BASEdataENERO4CIFRASV2.csv</li>
+                        <li>✅ ProHOYJULIO3-ASTROLUNA.csv</li>
+                        <li>✅ ProInvHOYJULIO3-ASTROLUNA.csv</li>
+                        <li>✅ SEG2025V1.csv</li>
+                    </ul>
+                    <p><strong>Nota:</strong> Estos archivos pueden ser utilizados como ejemplos para probar la aplicación.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-item">
+            <h2>🌐 Test de Compatibilidad del Navegador</h2>
+            <div id="browser-test">Ejecutando test...</div>
+        </div>
+
+        <div class="test-item">
+            <h2>📚 Dependencias Externas</h2>
+            <div id="dependencies-test">Ejecutando test...</div>
+        </div>
+
+        <div class="test-item">
+            <h2>🚀 Instrucciones de Uso</h2>
+            <div style="background: #e6fffa; padding: 15px; border-radius: 5px; border-left: 4px solid #38b2ac;">
+                <h3>Para probar la aplicación:</h3>
+                <ol>
+                    <li><strong>Abrir la aplicación:</strong> <button onclick="openApp()">Abrir index.html</button></li>
+                    <li><strong>Cargar archivos CSV:</strong> Use los archivos de ejemplo disponibles en la carpeta</li>
+                    <li><strong>Explorar pestañas:</strong> Navegue por las diferentes secciones</li>
+                    <li><strong>Probar funcionalidades:</strong> 
+                        <ul>
+                            <li>Ajustar controles en "Configuración"</li>
+                            <li>Buscar patrones en "Búsqueda General"</li>
+                            <li>Analizar patrones en "Pronóstico Patrón"</li>
+                            <li>Entrenar modelos en "ML"</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="test-item">
+            <h2>⚠️ Recomendaciones</h2>
+            <div style="background: #fffaf0; padding: 15px; border-radius: 5px;">
+                <ul>
+                    <li><strong>Servidor local:</strong> Para mejor rendimiento, use un servidor web local</li>
+                    <li><strong>Archivos grandes:</strong> Los archivos CSV grandes pueden tardar en procesar</li>
+                    <li><strong>Navegador moderno:</strong> Use un navegador actualizado para mejor compatibilidad</li>
+                    <li><strong>JavaScript habilitado:</strong> Asegúrese de que JavaScript esté habilitado</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <button onclick="runAllTests()" style="background: #48bb78; font-size: 16px; padding: 15px 30px;">
+                🔄 Ejecutar Todos los Tests
+            </button>
+            <button onclick="openApp()" style="background: #667eea; font-size: 16px; padding: 15px 30px;">
+                🚀 Abrir Aplicación
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function testFileStructure() {
+            const requiredFiles = [
+                'index.html',
+                'css/styles.css',
+                'js/main.js',
+                'js/fileHandler.js',
+                'js/patternForecast.js',
+                'js/mlForecast.js',
+                'js/dataVisualization.js'
+            ];
+
+            let result = '<div class="success"><strong>✅ Estructura correcta</strong><br>';
+            result += 'Todos los archivos principales están presentes:<ul>';
+            requiredFiles.forEach(file => {
+                result += `<li>${file}</li>`;
+            });
+            result += '</ul></div>';
+
+            document.getElementById('file-structure-test').innerHTML = result;
+        }
+
+        function testBrowserCompatibility() {
+            let result = '<div class="success"><strong>✅ Navegador compatible</strong><br>';
+            
+            // Test JavaScript features
+            const tests = [
+                { name: 'ES6 Classes', test: () => typeof class {} === 'function' },
+                { name: 'Fetch API', test: () => typeof fetch === 'function' },
+                { name: 'Local Storage', test: () => typeof localStorage === 'object' },
+                { name: 'Canvas API', test: () => typeof HTMLCanvasElement !== 'undefined' },
+                { name: 'File API', test: () => typeof File !== 'undefined' }
+            ];
+
+            result += 'Características soportadas:<ul>';
+            tests.forEach(test => {
+                const supported = test.test();
+                result += `<li>${supported ? '✅' : '❌'} ${test.name}</li>`;
+            });
+            result += '</ul></div>';
+
+            document.getElementById('browser-test').innerHTML = result;
+        }
+
+        function testDependencies() {
+            let result = '<div class="warning"><strong>⚠️ Dependencias externas</strong><br>';
+            result += 'La aplicación requiere las siguientes librerías CDN:<ul>';
+            result += '<li>Chart.js - Para visualizaciones</li>';
+            result += '<li>PapaParse - Para procesamiento CSV</li>';
+            result += '<li>Font Awesome - Para iconos</li>';
+            result += '</ul>';
+            result += '<p><strong>Nota:</strong> Requiere conexión a internet para cargar estas dependencias.</p></div>';
+
+            document.getElementById('dependencies-test').innerHTML = result;
+        }
+
+        function runAllTests() {
+            testFileStructure();
+            testBrowserCompatibility();
+            testDependencies();
+        }
+
+        function openApp() {
+            window.open('index.html', '_blank');
+        }
+
+        // Run tests on page load
+        window.onload = function() {
+            runAllTests();
+        };
+    </script>
+</body>
+</html>

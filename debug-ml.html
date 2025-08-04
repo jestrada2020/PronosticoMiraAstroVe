@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug ML - Estado de Datos</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5; 
+        }
+        .debug-container { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            margin-bottom: 20px;
+        }
+        .status { 
+            margin: 5px 0; 
+            padding: 5px; 
+            border-radius: 3px; 
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        #console { 
+            background: #000; 
+            color: #0f0; 
+            padding: 15px; 
+            border-radius: 5px; 
+            font-family: monospace; 
+            height: 300px; 
+            overflow-y: auto; 
+            margin-top: 20px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #5a67d8; }
+        .debug-btn { background: #ed8936; }
+        .debug-btn:hover { background: #dd6b20; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th { background: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>🐛 Debug ML-LightGBM - Estado de Datos</h1>
+        
+        <div class="actions">
+            <button onclick="checkAppStatus()">🔍 Verificar Estado App</button>
+            <button onclick="checkMLStatus()" class="debug-btn">🤖 Verificar Estado ML</button>
+            <button onclick="testDataAccess()">📊 Probar Acceso a Datos</button>
+            <button onclick="forceMLInit()">🔄 Forzar Inicialización ML</button>
+            <button onclick="clearConsole()">🧹 Limpiar Consola</button>
+        </div>
+
+        <div id="status-display">
+            <h3>Estado Actual:</h3>
+            <div id="app-status" class="status info">Verificando...</div>
+            <div id="ml-status" class="status info">Verificando...</div>
+            <div id="data-status" class="status info">Verificando...</div>
+        </div>
+
+        <div id="data-details">
+            <h3>Detalles de Datos:</h3>
+            <table id="data-table">
+                <thead>
+                    <tr>
+                        <th>Archivo</th>
+                        <th>Estado</th>
+                        <th>Filas</th>
+                        <th>Primeras Columnas</th>
+                    </tr>
+                </thead>
+                <tbody id="data-table-body">
+                    <tr><td colspan="4">No hay datos cargados</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Console Output:</h3>
+        <div id="console"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script>
+        // Override console methods to display in our debug console
+        const debugConsole = document.getElementById('console');
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        function addToConsole(message, type = 'log') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ff6666' : type === 'warn' ? '#ffff66' : '#66ff66';
+            debugConsole.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            debugConsole.scrollTop = debugConsole.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToConsole(args.join(' '), 'log');
+        };
+
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToConsole(args.join(' '), 'error');
+        };
+
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToConsole(args.join(' '), 'warn');
+        };
+
+        function clearConsole() {
+            debugConsole.innerHTML = '';
+            console.log('Console cleared');
+        }
+
+        function updateStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${type}`;
+        }
+
+        function checkAppStatus() {
+            console.log('Checking app status...');
+            
+            if (typeof window.app !== 'undefined') {
+                console.log('✓ window.app is available');
+                updateStatus('app-status', '✓ App disponible', 'success');
+                
+                const filesLoaded = window.app.filesLoaded;
+                const dataAvailable = window.app.data;
+                
+                console.log('Files loaded status:', filesLoaded);
+                console.log('Data keys:', Object.keys(dataAvailable));
+                
+                updateDataTable(dataAvailable);
+            } else {
+                console.error('✗ window.app is NOT available');
+                updateStatus('app-status', '✗ App no disponible', 'error');
+            }
+        }
+
+        function checkMLStatus() {
+            console.log('Checking ML status...');
+            
+            if (typeof window.mlForecast !== 'undefined') {
+                console.log('✓ window.mlForecast is available');
+                updateStatus('ml-status', '✓ MLForecast disponible', 'success');
+                
+                // Call the debug method if available
+                if (typeof window.mlForecast.debugDataStatus === 'function') {
+                    console.log('Calling MLForecast debug method...');
+                    window.mlForecast.debugDataStatus();
+                } else {
+                    console.warn('MLForecast debug method not available');
+                }
+            } else {
+                console.error('✗ window.mlForecast is NOT available');
+                updateStatus('ml-status', '✗ MLForecast no disponible', 'error');
+            }
+        }
+
+        function testDataAccess() {
+            console.log('Testing data access...');
+            
+            if (window.app && window.app.data) {
+                const data = window.app.data;
+                let hasRequiredData = false;
+                
+                if (data.main && data.inverse) {
+                    console.log('✓ Both main and inverse data available');
+                    console.log(`Main data: ${data.main.length} rows`);
+                    console.log(`Inverse data: ${data.inverse.length} rows`);
+                    hasRequiredData = true;
+                    updateStatus('data-status', '✓ Datos principales disponibles', 'success');
+                } else {
+                    console.warn('✗ Missing main or inverse data');
+                    console.log('Available data keys:', Object.keys(data));
+                    updateStatus('data-status', '✗ Faltan datos principales', 'error');
+                }
+
+                // Test sample data
+                if (data.main && data.main.length > 0) {
+                    const sample = data.main[0];
+                    console.log('Sample main data:', sample);
+                    console.log('Sample keys:', Object.keys(sample));
+                }
+            } else {
+                console.error('No app data available');
+                updateStatus('data-status', '✗ No hay datos de app', 'error');
+            }
+        }
+
+        function forceMLInit() {
+            console.log('Forcing ML initialization...');
+            
+            if (window.app && window.mlForecast) {
+                console.log('Calling app.initMLForecast()...');
+                window.app.initMLForecast();
+                
+                // Also try direct initialization
+                if (window.app.data) {
+                    console.log('Also calling mlForecast.init directly...');
+                    window.mlForecast.init(window.app.data);
+                }
+            } else {
+                console.error('Cannot force init - app or mlForecast not available');
+                console.log('Available objects:', {
+                    hasApp: !!window.app,
+                    hasMLForecast: !!window.mlForecast
+                });
+            }
+        }
+
+        function updateDataTable(data) {
+            const tbody = document.getElementById('data-table-body');
+            if (!data) {
+                tbody.innerHTML = '<tr><td colspan="4">No hay datos disponibles</td></tr>';
+                return;
+            }
+
+            const rows = Object.keys(data).map(key => {
+                const dataset = data[key];
+                const status = dataset && dataset.length > 0 ? '✓ Cargado' : '✗ Vacío';
+                const statusClass = dataset && dataset.length > 0 ? 'success' : 'error';
+                const rows = dataset ? dataset.length : 0;
+                const columns = dataset && dataset.length > 0 ? Object.keys(dataset[0]).slice(0, 5).join(', ') : 'N/A';
+                
+                return `
+                    <tr>
+                        <td>${key}</td>
+                        <td class="${statusClass}">${status}</td>
+                        <td>${rows}</td>
+                        <td>${columns}${Object.keys(dataset[0] || {}).length > 5 ? '...' : ''}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = rows;
+        }
+
+        // Auto-run checks when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Debug ML page loaded');
+            
+            // Wait a bit for the main app to load
+            setTimeout(() => {
+                checkAppStatus();
+                checkMLStatus();
+                testDataAccess();
+            }, 1000);
+
+            // Auto-refresh every 10 seconds
+            setInterval(() => {
+                if (window.app) {
+                    checkAppStatus();
+                    testDataAccess();
+                }
+            }, 10000);
+        });
+    </script>
+    <script src="js/errorHandler.js"></script>
+    <script src="js/dataAdapter.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/fileHandler.js"></script>
+    <script src="js/mlForecast.js"></script>
+    <script src="quickfix.js"></script>
+</body>
+</html>

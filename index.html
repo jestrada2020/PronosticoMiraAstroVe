@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRONOSTICO2024 - Aplicación de Análisis y Predicción</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1><i class="fas fa-crystal-ball"></i> PRONOSTICO2024</h1>
+            <p>Aplicación de Análisis y Predicción Astrológica</p>
+        </header>
+
+        <!-- File Upload Section -->
+        <section class="file-upload-section">
+            <div class="upload-container">
+                <h2><i class="fas fa-upload"></i> Cargar Archivos CSV</h2>
+                <div class="upload-grid">
+                    <div class="upload-item">
+                        <label for="file-main">Archivo Principal (ProHOY...csv):</label>
+                        <input type="file" id="file-main" accept=".csv" />
+                        <span class="file-status" id="status-main">No cargado</span>
+                    </div>
+                    <div class="upload-item">
+                        <label for="file-inv">Archivo Inverso (ProInvHOY...csv):</label>
+                        <input type="file" id="file-inv" accept=".csv" />
+                        <span class="file-status" id="status-inv">No cargado</span>
+                    </div>
+                    <div class="upload-item">
+                        <label for="file-4cifras">Base 4 Cifras (BASEdata...4CIFRAS...):</label>
+                        <input type="file" id="file-4cifras" accept=".csv" />
+                        <span class="file-status" id="status-4cifras">No cargado</span>
+                    </div>
+                    <div class="upload-item">
+                        <label for="file-3cifras">Base 3 Cifras (BASEdata...3CIFRAS...):</label>
+                        <input type="file" id="file-3cifras" accept=".csv" />
+                        <span class="file-status" id="status-3cifras">No cargado</span>
+                    </div>
+                    <div class="upload-item">
+                        <label for="file-seg">Archivo SEG (SEG2024V1.csv):</label>
+                        <input type="file" id="file-seg" accept=".csv" />
+                        <span class="file-status" id="status-seg">No cargado</span>
+                    </div>
+                </div>
+                <div class="validation-status">
+                    <p id="validation-message">Cargue todos los archivos CSV para comenzar el análisis</p>
+                    <button onclick="window.fileHandler.debugFileStatus()" style="background: #ed8936; color: white; border: none; padding: 5px 10px; border-radius: 5px; margin-top: 10px; font-size: 0.8em;">
+                        <i class="fas fa-bug"></i> Debug Archivos
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Navigation Tabs -->
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="config">Configuración</button>
+            <button class="tab-btn" data-tab="general">Búsqueda General</button>
+            <button class="tab-btn" data-tab="pronostico0">Pronóstico Patrón</button>
+            <button class="tab-btn" data-tab="ml">ML-LightGBM</button>
+            <button class="tab-btn" data-tab="ml-advanced">ML-Avanzado</button>
+        </nav>
+
+        <!-- Tab Content -->
+        <main class="tab-content">
+            <!-- Configuration Tab -->
+            <div id="config-tab" class="tab-panel active">
+                <div class="panel-grid">
+                    <div class="control-panel">
+                        <h3><i class="fas fa-cog"></i> Controles Iniciales</h3>
+                        <div class="controls">
+                            <div class="control-group">
+                                <label for="num-datos">Número de Datos:</label>
+                                <input type="number" id="num-datos" min="1" max="10000" value="100">
+                            </div>
+                            <div class="control-group">
+                                <label for="fecha-inicio">Fecha Inicio:</label>
+                                <input type="date" id="fecha-inicio">
+                            </div>
+                            <div class="control-group">
+                                <label for="fecha-fin">Fecha Fin:</label>
+                                <input type="date" id="fecha-fin">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="visualization-panel">
+                        <h3><i class="fas fa-chart-line"></i> Correlaciones</h3>
+                        <div class="chart-container">
+                            <canvas id="correlation-chart1"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="correlation-chart2"></canvas>
+                        </div>
+                    </div>
+                    <div class="pattern-panel">
+                        <h3><i class="fas fa-pattern"></i> Histórico Últimas 3 Cifras</h3>
+                        <div id="pattern-table" class="data-table"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- General Search Tab -->
+            <div id="general-tab" class="tab-panel">
+                <div class="panel-grid">
+                    <div class="search-controls">
+                        <h3><i class="fas fa-search"></i> Controles de Búsqueda</h3>
+                        <div class="search-grid">
+                            <div class="control-group">
+                                <label for="vini-id">ID Inicial:</label>
+                                <input type="number" id="vini-id" min="1" value="1">
+                            </div>
+                            <div class="control-group">
+                                <label for="vfinal-id">ID Final:</label>
+                                <input type="number" id="vfinal-id" min="1" value="100">
+                            </div>
+                            <div class="control-group">
+                                <label for="signo-select">Signo:</label>
+                                <select id="signo-select">
+                                    <option value="">Todos</option>
+                                    <option value="Aries">Aries</option>
+                                    <option value="Tauro">Tauro</option>
+                                    <option value="Geminis">Géminis</option>
+                                    <option value="Cancer">Cáncer</option>
+                                    <option value="Leo">Leo</option>
+                                    <option value="Virgo">Virgo</option>
+                                    <option value="Libra">Libra</option>
+                                    <option value="Escorpion">Escorpión</option>
+                                    <option value="Sagitario">Sagitario</option>
+                                    <option value="Capricornio">Capricornio</option>
+                                    <option value="Acuario">Acuario</option>
+                                    <option value="Piscis">Piscis</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="results-panel">
+                        <h3><i class="fas fa-trophy"></i> Histórico Ganadores 2024</h3>
+                        <div id="winners-table" class="data-table"></div>
+                    </div>
+                    <div class="base-panel">
+                        <h3><i class="fas fa-database"></i> Base Histórica</h3>
+                        <div class="base-tabs">
+                            <button class="base-tab-btn active" data-base="4cifras">4 Cifras</button>
+                            <button class="base-tab-btn" data-base="3cifras">3 Cifras</button>
+                        </div>
+                        <div id="base-4cifras" class="base-content active">
+                            <div id="base-4cifras-table" class="data-table"></div>
+                        </div>
+                        <div id="base-3cifras" class="base-content">
+                            <div id="base-3cifras-table" class="data-table"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Forecast Pattern Tab -->
+            <div id="pronostico0-tab" class="tab-panel">
+                <div class="panel-grid">
+                    <div class="pattern-controls">
+                        <h3><i class="fas fa-brain"></i> Controles de Pronóstico</h3>
+                        <div class="pattern-search">
+                            <div class="digit-selector">
+                                <label>Seleccionar Patrón:</label>
+                                <div class="digit-inputs">
+                                    <input type="number" id="dc1" min="0" max="9" placeholder="C1">
+                                    <input type="number" id="dc2" min="0" max="9" placeholder="C2">
+                                    <input type="number" id="dc3" min="0" max="9" placeholder="C3">
+                                    <input type="number" id="dc4" min="0" max="9" placeholder="C4">
+                                </div>
+                            </div>
+                            <div class="pattern-type">
+                                <label for="pattern-type">Tipo de Patrón:</label>
+                                <select id="pattern-type">
+                                    <option value="PM2">PM2</option>
+                                    <option value="ULT2">ULT2</option>
+                                    <option value="DC">DC</option>
+                                    <option value="EXT">EXT</option>
+                                    <option value="C1C3">C1C3</option>
+                                    <option value="C2C4">C2C4</option>
+                                </select>
+                            </div>
+                            <button id="search-pattern" class="search-btn">
+                                <i class="fas fa-search"></i> Buscar Patrón
+                            </button>
+                        </div>
+                    </div>
+                    <div class="pattern-results">
+                        <h3><i class="fas fa-table"></i> Tabla ULT3 PRON1</h3>
+                        <div id="ult3-table" class="data-table"></div>
+                    </div>
+                    <div class="forecast-display">
+                        <h3><i class="fas fa-magic"></i> Pronóstico por Patrón</h3>
+                        <div id="pattern-forecast" class="forecast-results"></div>
+                        <div class="triangle-calculation">
+                            <h4>Cálculo Triangular:</h4>
+                            <div id="triangle-display"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ML Tab -->
+            <div id="ml-tab" class="tab-panel">
+                <div class="panel-grid">
+                    <div class="ml-controls">
+                        <h3><i class="fas fa-robot"></i> Controles ML</h3>
+                        <div class="ml-params">
+                            <div class="control-group">
+                                <label for="n-indices">Número de Índices:</label>
+                                <input type="number" id="n-indices" min="1" max="1000" value="100">
+                            </div>
+                            <div class="control-group">
+                                <label for="learning-rate">Tasa de Aprendizaje:</label>
+                                <input type="number" id="learning-rate" min="0.01" max="1" step="0.01" value="0.1">
+                            </div>
+                            <div class="control-group">
+                                <label for="train-percentage">% Entrenamiento:</label>
+                                <input type="number" id="train-percentage" min="10" max="95" value="80">
+                            </div>
+                            <button id="train-model" class="train-btn">
+                                <i class="fas fa-play"></i> Entrenar Modelo
+                            </button>
+                            <button id="generate-predictions" class="predict-btn">
+                                <i class="fas fa-magic"></i> Generar Predicciones
+                            </button>
+                            <button onclick="window.mlForecast.exportPredictions()" class="search-btn" style="margin-top: 10px;">
+                                <i class="fas fa-download"></i> Exportar Resultados
+                            </button>
+                            <button onclick="window.mlForecast.debugDataStatus()" class="search-btn" style="margin-top: 10px; background: #ed8936;">
+                                <i class="fas fa-bug"></i> Debug Estado
+                            </button>
+                            <button onclick="window.mlForecast.forceDataRefresh(); window.mlForecast.displayModelStatus();" class="search-btn" style="margin-top: 10px; background: #38a169;">
+                                <i class="fas fa-sync-alt"></i> Reconectar Datos
+                            </button>
+                        </div>
+                    </div>
+                    <div class="ml-results">
+                        <h3><i class="fas fa-chart-bar"></i> Predicciones ML</h3>
+                        <div id="ml-predictions" class="prediction-grid">
+                            <div class="prediction-card">
+                                <h4>C1 Predicciones</h4>
+                                <div id="c1-predictions" class="prediction-list"></div>
+                            </div>
+                            <div class="prediction-card">
+                                <h4>C2 Predicciones</h4>
+                                <div id="c2-predictions" class="prediction-list"></div>
+                            </div>
+                            <div class="prediction-card">
+                                <h4>C3 Predicciones</h4>
+                                <div id="c3-predictions" class="prediction-list"></div>
+                            </div>
+                            <div class="prediction-card">
+                                <h4>C4 Predicciones</h4>
+                                <div id="c4-predictions" class="prediction-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ml-performance">
+                        <h3><i class="fas fa-analytics"></i> Rendimiento del Modelo</h3>
+                        <div class="performance-charts">
+                            <canvas id="accuracy-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced ML Tab -->
+            <div id="ml-advanced-tab" class="tab-panel">
+                <div class="panel-grid">
+                    <div class="ml-advanced-controls">
+                        <h3><i class="fas fa-brain"></i> ML Avanzado</h3>
+                        <div class="algorithm-selection">
+                            <label for="algorithm-select">Algoritmo:</label>
+                            <select id="algorithm-select">
+                                <option value="svm">Support Vector Machine (SVM)</option>
+                            </select>
+                        </div>
+                        <div class="advanced-params">
+                            <div class="param-group">
+                                <label for="learning-rate-svm">Tasa de Aprendizaje:</label>
+                                <input type="number" id="learning-rate-svm" min="0.001" max="1" step="0.001" value="0.01">
+                            </div>
+                            <div class="param-group">
+                                <label for="regularization">Regularización:</label>
+                                <input type="number" id="regularization" min="0.01" max="100" step="0.01" value="1.0">
+                            </div>
+                            <div class="param-group">
+                                <label for="cross-validation">Validación Cruzada:</label>
+                                <select id="cross-validation">
+                                    <option value="5">5-Fold</option>
+                                    <option value="10">10-Fold</option>
+                                    <option value="3">3-Fold</option>
+                                </select>
+                            </div>
+                            <div class="param-group">
+                                <label for="feature-selection">Selección Features:</label>
+                                <select id="feature-selection">
+                                    <option value="all">Todas las características</option>
+                                    <option value="importance">Por importancia</option>
+                                    <option value="correlation">Por correlación</option>
+                                    <option value="pca">PCA</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="advanced-actions">
+                            <button id="hyperparameter-tuning" class="tune-btn">
+                                <i class="fas fa-cog"></i> Optimizar SVM
+                            </button>
+                            <button id="train-advanced-model" class="train-btn">
+                                <i class="fas fa-rocket"></i> Entrenar SVM
+                            </button>
+                            <button id="generate-advanced-predictions" class="predict-btn">
+                                <i class="fas fa-crystal-ball"></i> Predicciones SVM
+                            </button>
+                            <button id="compare-models" class="compare-btn">
+                                <i class="fas fa-chart-line"></i> Métricas SVM
+                            </button>
+                        </div>
+                    </div>
+                    <div class="ml-advanced-results">
+                        <h3><i class="fas fa-chart-area"></i> Resultados Avanzados</h3>
+                        <div id="advanced-model-status" class="model-status-advanced">
+                            <p>Seleccione un algoritmo y haga clic en "Entrenar Modelo Avanzado"</p>
+                        </div>
+                        <div class="algorithm-comparison">
+                            <h4>Rendimiento SVM por Posición</h4>
+                            <div id="algorithm-comparison-chart">
+                                <canvas id="comparison-chart"></canvas>
+                            </div>
+                        </div>
+                        <div class="feature-importance">
+                            <h4>Importancia de Características</h4>
+                            <div id="feature-importance-chart">
+                                <canvas id="importance-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ml-advanced-predictions">
+                        <h3><i class="fas fa-magic"></i> Predicciones Avanzadas</h3>
+                        <div class="prediction-ensemble">
+                            <h4>Predicciones SVM</h4>
+                            <div id="ensemble-predictions" class="ensemble-grid">
+                                <div class="ensemble-card ensemble-final">
+                                    <h5>Support Vector Machine</h5>
+                                    <div id="svm-predictions" class="prediction-list"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="confidence-analysis">
+                            <h4>Análisis de Confianza SVM</h4>
+                            <div id="confidence-chart">
+                                <canvas id="confidence-analysis-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay hidden">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Procesando datos...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/errorHandler.js"></script>
+    <script src="js/dataAdapter.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/fileHandler.js"></script>
+    <script src="js/patternForecast.js"></script>
+    <script src="js/mlForecast.js"></script>
+    <script src="js/mlAdvanced.js"></script>
+    <script src="js/dataVisualization.js"></script>
+    <script src="quickfix.js"></script>
+</body>
+</html>

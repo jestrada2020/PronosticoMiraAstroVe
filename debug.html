@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - File Loading</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5; 
+        }
+        .debug-container { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .file-input { 
+            margin: 10px 0; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+        }
+        .status { 
+            margin: 5px 0; 
+            padding: 5px; 
+            border-radius: 3px; 
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        #console { 
+            background: #000; 
+            color: #0f0; 
+            padding: 15px; 
+            border-radius: 5px; 
+            font-family: monospace; 
+            height: 200px; 
+            overflow-y: auto; 
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>🐛 Debug - Carga de Archivos CSV</h1>
+        
+        <div class="file-section">
+            <h3>Archivo Principal (main)</h3>
+            <input type="file" id="file-main" accept=".csv" class="file-input">
+            <div id="status-main" class="status">No cargado</div>
+        </div>
+
+        <div class="file-section">
+            <h3>Archivo Inverso (inverse)</h3>
+            <input type="file" id="file-inv" accept=".csv" class="file-input">
+            <div id="status-inverse" class="status">No cargado</div>
+        </div>
+
+        <div class="file-section">
+            <h3>Base 4 Cifras</h3>
+            <input type="file" id="file-4cifras" accept=".csv" class="file-input">
+            <div id="status-base4cifras" class="status">No cargado</div>
+        </div>
+
+        <div class="file-section">
+            <h3>Base 3 Cifras</h3>
+            <input type="file" id="file-3cifras" accept=".csv" class="file-input">
+            <div id="status-base3cifras" class="status">No cargado</div>
+        </div>
+
+        <div class="file-section">
+            <h3>Archivo SEG</h3>
+            <input type="file" id="file-seg" accept=".csv" class="file-input">
+            <div id="status-seg" class="status">No cargado</div>
+        </div>
+
+        <div id="validation-container">
+            <div id="validation-message" class="status warning">Cargue todos los archivos CSV para comenzar el análisis</div>
+        </div>
+
+        <h3>Console Output:</h3>
+        <div id="console"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script>
+        // Override console methods to display in our debug console
+        const debugConsole = document.getElementById('console');
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        function addToConsole(message, type = 'log') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ff6666' : type === 'warn' ? '#ffff66' : '#66ff66';
+            debugConsole.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            debugConsole.scrollTop = debugConsole.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToConsole(args.join(' '), 'log');
+        };
+
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToConsole(args.join(' '), 'error');
+        };
+
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToConsole(args.join(' '), 'warn');
+        };
+
+        console.log('Debug console initialized');
+    </script>
+    <script src="js/errorHandler.js"></script>
+    <script src="js/dataAdapter.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/fileHandler.js"></script>
+    <script src="quickfix.js"></script>
+    
+    <script>
+        // Función para probar la carga de archivos específicos
+        function testWithSampleFiles() {
+            console.log('Probando con archivos de muestra...');
+            
+            // Simular carga exitosa de archivos
+            setTimeout(() => {
+                if (window.app) {
+                    console.log('Simulando carga de archivos...');
+                    
+                    // Crear datos de prueba
+                    const sampleMainData = [
+                        { NUM: '1234', SIGNO: 'Aries', ID: 1, FECHA: '2025-01-01', Tfecha: '2025-01-01', C1: 1, C2: 2, C3: 3, C4: 4 }
+                    ];
+                    
+                    const sampleSegData = [
+                        { GANO: '5678', SIGNO: 'Leo', ID: 2, FECHA: '2025-01-02', MES: 'enero' }
+                    ];
+                    
+                    // Simular carga
+                    window.app.onFileLoaded('main', sampleMainData);
+                    window.app.onFileLoaded('inverse', sampleMainData);
+                    window.app.onFileLoaded('seg', sampleSegData);
+                    
+                    console.log('Archivos de prueba cargados');
+                }
+            }, 2000);
+        }
+        
+        // Botón para prueba automática
+        document.addEventListener('DOMContentLoaded', () => {
+            const button = document.createElement('button');
+            button.textContent = '🧪 Probar con datos de muestra';
+            button.style.margin = '10px 0';
+            button.style.padding = '10px 20px';
+            button.style.background = '#007bff';
+            button.style.color = 'white';
+            button.style.border = 'none';
+            button.style.borderRadius = '5px';
+            button.style.cursor = 'pointer';
+            button.onclick = testWithSampleFiles;
+            
+            document.querySelector('.debug-container').appendChild(button);
+        });
+    </script>
+</body>
+</html>
